@@ -679,6 +679,7 @@ function setTab(){
   <div><div class="sec-h"><span>Install on iPhone</span></div><div class="group"><div class="cell" style="display:block;font-size:15px;line-height:1.45">1. Open this app's own link in Safari.<br>2. Tap Share, then Add to Home Screen.<br>3. Launch it from the new icon. It opens full screen like any app.</div></div></div>
 
   <div><div class="sec-h"><span>Data</span></div><div class="group">${S.sample?'<button class="cell link" data-act="clear-sample">Clear Sample Entries</button>':''}<button class="cell red" data-act="erase">Erase All Data</button></div></div>
+  <p class="sec-f" style="text-align:center">Pocket Ledger · build 5</p>
   </div>`;
 }
 
@@ -1067,6 +1068,6 @@ render();
 if(S.lock.hash)showLock('unlock');
 })();
 </script>
-<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<script>if('serviceWorker' in navigator){const had=!!navigator.serviceWorker.controller;let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!done){done=true;location.reload()}});addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}))}</script>
 </body>
 </html>
