@@ -343,7 +343,7 @@ function evalAmt(s){
 /* ---------- state ---------- */
 const mkCat=(a,kind)=>({id:uid(),name:a[0],icon:a[1],color:COLORS[a[2]],kind,budget:0,subs:a[3].slice()});
 function defaults(){
-  return{v:4,currency:'USD',mstart:1,budget:0,
+  return{v:5,currency:'USD',mstart:1,budget:0,
     cats:[...DEF_EXP.map(a=>mkCat(a,'exp')),...DEF_INC.map(a=>mkCat(a,'inc'))],
     accs:[{id:uid(),name:'Cash',group:'cash',open:0},{id:uid(),name:'Checking',group:'bank',open:0},{id:uid(),name:'Credit card',group:'card',open:0}],
     tx:[],rec:[],tpl:[],lock:{hash:null,after:0},sample:false,last:{}};
@@ -378,6 +378,9 @@ function addSample(){
 function fill(o){const d=defaults();for(const k in d)if(o[k]===undefined)o[k]=d[k];o.cats.forEach(c=>{if(!c.subs)c.subs=[];if(!c.icon)c.icon=c.name.charAt(0).toUpperCase()});
   if((o.v||0)<3){if(!o.cats.some(c=>c.kind==='inc'&&/card rewards/i.test(c.name)))o.cats.splice((o.cats.findIndex(c=>c.kind==='inc')+1)||o.cats.length,0,mkCat(DEF_INC[1],'inc'));o.v=3}
   if(o.v<4){(o.accs||[]).forEach(a=>{if(LIAB[a.group]&&a.open>0)a.open=-a.open});o.v=4}
+  if(o.v<5){const bonusTx=new Set((o.accs||[]).map(a=>a.bonus&&a.bonus.tx).filter(Boolean));
+    (o.tx||[]).forEach(t=>{const c=o.cats.find(x=>x.id===t.cat),a=(o.accs||[]).find(x=>x.id===t.acc);
+      if(t.type==='inc'&&c&&isRewardsCat(c)&&a&&a.group==='card'&&!bonusTx.has(t.id))t.acc=rewardsAcc(a,o).id});o.v=5}
   return o}
 function upgrade(o){
   if(o.v>=2)return fill(o);
@@ -399,6 +402,9 @@ function load(){
   save();
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));storageOK=true}catch(e){storageOK=false}}
+const isRewardsCat=c=>!!c&&c.kind==='inc'&&/card rewards/i.test(c.name);
+function rewardsAcc(card,st){st=st||S;let r=st.accs.find(x=>x.group==='rewards'&&x.card===card.id);
+  if(!r){r={id:uid(),name:card.name+' Rewards',group:'rewards',open:0,card:card.id};const i=st.accs.indexOf(card);st.accs.splice(i<0?st.accs.length:i+1,0,r)}return r}
 const cat=id=>S.cats.find(c=>c.id===id)||{id:null,name:'Uncategorized',icon:'?',color:'#8E8E93',kind:'exp',subs:[]};
 const acc=id=>S.accs.find(a=>a.id===id)||{name:'Unknown account',group:'other'};
 const firstCat=k=>{const c=S.cats.find(x=>x.kind===k);return c?c.id:null};
@@ -631,7 +637,7 @@ function accTab(){
   GROUPS.forEach(g=>{
     const list=S.accs.filter(a=>a.group===g[0]);if(!list.length)return;
     const tot=list.reduce((s,a)=>s+bal(a.id),0);
-    h+=`<div><div class="sec-h"><span>${g[1]}</span><span class="num">${tot<0?'−':''}${money(Math.abs(tot))}</span></div><div class="group">${list.map(a=>{const b=bal(a.id);return `<button class="cell ic" data-act="acc-edit" data-id="${a.id}"><span class="tile" style="--c:${GCOL[a.group]}">${GICON[a.group]}</span><span class="grow">${esc(a.name)}${LIAB[a.group]&&b<0?'<span class="sub">Owed</span>':LIAB[a.group]&&b>0?'<span class="sub">Credit balance</span>':''}</span><span class="val num" style="color:${b<0?'var(--red)':'var(--label)'}">${b<0?'−':''}${money(Math.abs(b))}</span>${chevR}</button>`}).join('')}</div></div>`;
+    h+=`<div><div class="sec-h"><span>${g[1]}</span><span class="num">${tot<0?'−':''}${money(Math.abs(tot))}</span></div><div class="group">${list.map(a=>{const b=bal(a.id);return `<button class="cell ic" data-act="acc-edit" data-id="${a.id}"><span class="tile" style="--c:${GCOL[a.group]}">${GICON[a.group]}</span><span class="grow">${esc(a.name)}${(()=>{const r=a.group==='card'&&S.accs.find(x=>x.group==='rewards'&&x.card===a.id),rb=r?bal(r.id):0,st=LIAB[a.group]&&b<0?'Owed':LIAB[a.group]&&b>0?'Credit balance':'';const t=[st,rb?'Rewards '+money(rb):''].filter(Boolean).join(' · ');return t?`<span class="sub">${esc(t)}</span>`:''})()}</span><span class="val num" style="color:${b<0?'var(--red)':'var(--label)'}">${b<0?'−':''}${money(Math.abs(b))}</span>${chevR}</button>`}).join('')}</div></div>`;
   });
   h+=`<div class="group"><button class="cell link" data-act="acc-new">Add Account</button><button class="cell link" data-act="xfer">New Transfer</button></div><p class="sec-f">Balances start from each account's starting balance plus everything logged. Transfers move money between accounts and never count as spending. Add a sign-up bonus to any credit card to track its minimum spend; once earned it is added to your assets.</p>`;
   return `<div class="stack">${h}</div>`;
@@ -679,7 +685,7 @@ function setTab(){
   <div><div class="sec-h"><span>Install on iPhone</span></div><div class="group"><div class="cell" style="display:block;font-size:15px;line-height:1.45">1. Open this app's own link in Safari.<br>2. Tap Share, then Add to Home Screen.<br>3. Launch it from the new icon. It opens full screen like any app.</div></div></div>
 
   <div><div class="sec-h"><span>Data</span></div><div class="group">${S.sample?'<button class="cell link" data-act="clear-sample">Clear Sample Entries</button>':''}<button class="cell red" data-act="erase">Erase All Data</button></div></div>
-  <p class="sec-f" style="text-align:center">Pocket Ledger · build 5</p>
+  <p class="sec-f" style="text-align:center">Pocket Ledger · build 6</p>
   </div>`;
 }
 
@@ -779,6 +785,8 @@ function saveTx(more){
   const data=txData();if(!data)return;const d=sh.d,ty=sh.type;
   if(ty!=='xfer')S.last['c_'+ty]=d.cat;S.last.acc=d.acc;if(ty==='xfer')S.last.to=d.to;
   let msg='Saved';
+  const da=S.accs.find(x=>x.id===data.acc);
+  if(data.type==='inc'&&isRewardsCat(cat(data.cat))&&da&&da.group==='card'){data.acc=rewardsAcc(da).id;msg='Saved to '+acc(data.acc).name}
   if(sh.id){const t=S.tx.find(x=>x.id===sh.id);Object.assign(t,data);delete t.sample}
   else if(d.repeat&&d.repeat!=='none'){
     S.rec.push(Object.assign({},data,{id:uid(),freq:d.repeat,start:d.date,anchor:pd(d.date).getDate(),last:null}));
@@ -834,7 +842,7 @@ function bonusSection(a,d){
   const b=a&&a.bonus;
   if(b&&b.done)return `<div><div class="sec-h"><span>Sign-up bonus</span></div><div class="group"><div class="cell"><span class="grow">Earned ${esc(fdate(b.doneOn||b.end))}</span><span class="val num" style="color:var(--green)">+${money(b.amt)}</span></div><button class="cell link" data-act="bonus-new">Track Another Bonus</button></div></div>`;
   const deps=S.accs.filter(x=>!LIAB[x.group]).sort((x,y)=>(y.group==='rewards')-(x.group==='rewards'));
-  const noRewards=!deps.some(x=>x.group==='rewards');
+  const noRewards=!deps.some(x=>x.group==='rewards'&&x.card===a?.id);
   const live=b&&a?bonusInfo(a):null;
   return `<div><div class="sec-h"><span>Sign-up bonus</span></div><div class="group">
   <label class="frow"><span>Bonus value</span><input id="a-bamt" inputmode="decimal" value="${esc(d.bamt)}" placeholder="Like 750"></label>
@@ -842,7 +850,7 @@ function bonusSection(a,d){
   <label class="frow"><span>Starts</span><input type="date" id="a-bstart" value="${esc(d.bstart)}"></label>
   <label class="frow"><span>Deadline</span><input type="date" id="a-bend" value="${esc(d.bend)}"></label>
   ${live?`<div class="cell" style="display:block"><span style="display:flex;justify-content:space-between;gap:8px;font-size:15px"><span>${money(live.sp)} of ${money(b.spend)}</span><span>${esc(live.met?'Spend met':live.left<0?'Deadline passed':live.left+' days left')}</span></span>${bonusMeter(a)}</div>
-  <label class="frow"><span>Deposit to</span><select id="a-bdep">${deps.map(x=>`<option value="${x.id}"${x.id===d.bdep?' selected':''}>${esc(x.name)}</option>`).join('')}<option value="__card"${d.bdep==='__card'?' selected':''}>Statement credit</option><option value="__new"${d.bdep==='__new'||(!d.bdep&&noRewards)?' selected':''}>New rewards account</option></select></label>
+  <label class="frow"><span>Deposit to</span><select id="a-bdep">${deps.map(x=>`<option value="${x.id}"${x.id===d.bdep?' selected':''}>${esc(x.name)}</option>`).join('')}<option value="__card"${d.bdep==='__card'?' selected':''}>Statement credit</option><option value="__new"${d.bdep==='__new'||(!d.bdep&&noRewards)?' selected':''}>${esc(a.name)} Rewards</option></select></label>
   <button class="cell link" data-act="bonus-earn">Mark Bonus Earned</button><button class="cell red" data-act="bonus-clear">Remove Bonus</button>`:''}
   </div><p class="sec-f">Purchases on this card from the start date to the deadline count toward the spend. ${live?'Marking it earned logs the bonus as Card rewards income and adds it to your assets.':'Save to start tracking.'}</p></div>`;
 }
@@ -987,7 +995,7 @@ document.addEventListener('click',e=>{
   case 'sign':{const i=$('#a-open');const v=i.value.trim();i.value=/^[-−]/.test(v)?v.slice(1):'-'+v;break}
   case 'bonus-earn':{capture();const a=saveAcc();if(!a)return;if(!a.bonus)return err('Enter a bonus value first.');
     let dep=sh.d.bdep||'__new';
-    if(dep==='__new'){const r={id:uid(),name:a.name+' rewards',group:'rewards',open:0};S.accs.push(r);dep=r.id}else if(dep==='__card')dep=a.id;
+    if(dep==='__new')dep=rewardsAcc(a).id;else if(dep==='__card')dep=a.id;
     const rc=S.cats.find(c=>c.kind==='inc'&&/card rewards/i.test(c.name))||S.cats.find(c=>c.kind==='inc');
     const tx={id:uid(),ts:Date.now(),type:'inc',amt:a.bonus.amt,date:today(),cat:rc.id,sub:rc.subs.includes('Sign-up bonus')?'Sign-up bonus':'',acc:dep,to:null,payee:a.name,note:'Sign-up bonus',tags:['bonus']};
     S.tx.push(tx);Object.assign(a.bonus,{done:true,doneOn:today(),tx:tx.id});save();closeSheet();render();toast(money(tx.amt)+' added to '+acc(dep).name);break}
