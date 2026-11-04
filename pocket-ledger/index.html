@@ -343,7 +343,7 @@ function evalAmt(s){
 /* ---------- state ---------- */
 const mkCat=(a,kind)=>({id:uid(),name:a[0],icon:a[1],color:COLORS[a[2]],kind,budget:0,subs:a[3].slice()});
 function defaults(){
-  return{v:3,currency:'USD',mstart:1,budget:0,
+  return{v:4,currency:'USD',mstart:1,budget:0,
     cats:[...DEF_EXP.map(a=>mkCat(a,'exp')),...DEF_INC.map(a=>mkCat(a,'inc'))],
     accs:[{id:uid(),name:'Cash',group:'cash',open:0},{id:uid(),name:'Checking',group:'bank',open:0},{id:uid(),name:'Credit card',group:'card',open:0}],
     tx:[],rec:[],tpl:[],lock:{hash:null,after:0},sample:false,last:{}};
@@ -377,6 +377,7 @@ function addSample(){
 }
 function fill(o){const d=defaults();for(const k in d)if(o[k]===undefined)o[k]=d[k];o.cats.forEach(c=>{if(!c.subs)c.subs=[];if(!c.icon)c.icon=c.name.charAt(0).toUpperCase()});
   if((o.v||0)<3){if(!o.cats.some(c=>c.kind==='inc'&&/card rewards/i.test(c.name)))o.cats.splice((o.cats.findIndex(c=>c.kind==='inc')+1)||o.cats.length,0,mkCat(DEF_INC[1],'inc'));o.v=3}
+  if(o.v<4){(o.accs||[]).forEach(a=>{if(LIAB[a.group]&&a.open>0)a.open=-a.open});o.v=4}
   return o}
 function upgrade(o){
   if(o.v>=2)return fill(o);
@@ -623,14 +624,14 @@ function budgetHTML(p){
 
 /* ---------- accounts tab ---------- */
 function accTab(){
-  let assets=0,liab=0;S.accs.forEach(a=>{const b=bal(a.id);if(LIAB[a.group]||b<0)liab+=b;else assets+=b});
+  let assets=0,liab=0;S.accs.forEach(a=>{const b=bal(a.id);if(b<0)liab+=b;else assets+=b});
   let h=banners()+`<div class="group"><div class="hero"><span>Net worth</span><b class="${assets+liab<0?'red':''}">${assets+liab<0?'−':''}${money(Math.abs(assets+liab))}</b></div><div class="sum3" style="border-top:.5px solid var(--sep);grid-template-columns:1fr 1fr"><div><span>Assets</span><b class="inc">${money(assets)}</b></div><div><span>Liabilities</span><b class="exp">${money(Math.abs(liab))}</b></div></div></div>`;
   const act=S.accs.filter(a=>a.group==='card'&&a.bonus&&!a.bonus.done);
   if(act.length)h+=`<div><div class="sec-h"><span>Sign-up bonuses</span><span class="num">${money(act.reduce((s,a)=>s+a.bonus.amt,0))} in progress</span></div><div class="group">${act.map(bonusRow).join('')}</div></div>`;
   GROUPS.forEach(g=>{
     const list=S.accs.filter(a=>a.group===g[0]);if(!list.length)return;
     const tot=list.reduce((s,a)=>s+bal(a.id),0);
-    h+=`<div><div class="sec-h"><span>${g[1]}</span><span class="num">${tot<0?'−':''}${money(Math.abs(tot))}</span></div><div class="group">${list.map(a=>{const b=bal(a.id);return `<button class="cell ic" data-act="acc-edit" data-id="${a.id}"><span class="tile" style="--c:${GCOL[a.group]}">${GICON[a.group]}</span><span class="grow">${esc(a.name)}${LIAB[a.group]&&b<0?'<span class="sub">Owed</span>':''}</span><span class="val num" style="color:${b<0?'var(--red)':'var(--label)'}">${b<0?'−':''}${money(Math.abs(b))}</span>${chevR}</button>`}).join('')}</div></div>`;
+    h+=`<div><div class="sec-h"><span>${g[1]}</span><span class="num">${tot<0?'−':''}${money(Math.abs(tot))}</span></div><div class="group">${list.map(a=>{const b=bal(a.id);return `<button class="cell ic" data-act="acc-edit" data-id="${a.id}"><span class="tile" style="--c:${GCOL[a.group]}">${GICON[a.group]}</span><span class="grow">${esc(a.name)}${LIAB[a.group]&&b<0?'<span class="sub">Owed</span>':LIAB[a.group]&&b>0?'<span class="sub">Credit balance</span>':''}</span><span class="val num" style="color:${b<0?'var(--red)':'var(--label)'}">${b<0?'−':''}${money(Math.abs(b))}</span>${chevR}</button>`}).join('')}</div></div>`;
   });
   h+=`<div class="group"><button class="cell link" data-act="acc-new">Add Account</button><button class="cell link" data-act="xfer">New Transfer</button></div><p class="sec-f">Balances start from each account's starting balance plus everything logged. Transfers move money between accounts and never count as spending. Add a sign-up bonus to any credit card to track its minimum spend; once earned it is added to your assets.</p>`;
   return `<div class="stack">${h}</div>`;
