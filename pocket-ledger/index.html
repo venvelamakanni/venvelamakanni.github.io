@@ -199,6 +199,7 @@ button.cell:active,.row:active{background:var(--fill)}
 @media (prefers-reduced-motion:reduce){.panel,.scrim{animation:none}.row{transition:none}}
 .sscroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px}
 .sscroll>*{flex-shrink:0}
+.sgn{flex:none;width:40px;height:32px;border-radius:8px;border:0;background:var(--fill);color:var(--blue);font-size:19px;font-weight:600}
 .grabber{width:36px;height:5px;border-radius:3px;background:var(--fill2);margin:7px auto 0;flex:none}
 .sheet-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:44px}
 .sheet-bar .tbtn:last-child{justify-self:end}
@@ -297,14 +298,14 @@ textarea{width:100%;height:100px;border:0;border-radius:12px;background:var(--bg
 const KEY='pocket-ledger-v1';
 const $=s=>document.querySelector(s);
 const COLORS=['#FF3B30','#FF9500','#FFCC00','#34C759','#00C7BE','#30B0C7','#32ADE6','#007AFF','#5856D6','#AF52DE','#FF2D55','#A2845E','#8E8E93'];
-const GROUPS=[['cash','Cash'],['bank','Bank accounts'],['card','Credit cards'],['savings','Savings'],['invest','Investments'],['loan','Loans'],['other','Other']];
-const GICON={cash:'💵',bank:'🏦',card:'💳',savings:'🐷',invest:'📈',loan:'📄',other:'🗂️'};
-const GCOL={cash:'#34C759',bank:'#007AFF',card:'#FF9500',savings:'#FF2D55',invest:'#5856D6',loan:'#8E8E93',other:'#A2845E'};
+const GROUPS=[['cash','Cash'],['bank','Bank accounts'],['card','Credit cards'],['savings','Savings'],['rewards','Rewards & points'],['invest','Investments'],['loan','Loans'],['other','Other']];
+const GICON={cash:'💵',bank:'🏦',card:'💳',savings:'🐷',rewards:'🎁',invest:'📈',loan:'📄',other:'🗂️'};
+const GCOL={cash:'#34C759',bank:'#007AFF',card:'#FF9500',savings:'#FF2D55',rewards:'#AF52DE',invest:'#5856D6',loan:'#8E8E93',other:'#A2845E'};
 const LIAB={card:1,loan:1};
 const CURRENCIES=['USD','EUR','GBP','INR','CAD','AUD','JPY','SGD','AED','CHF','MXN','NZD','ZAR'];
 const ICON={Groceries:'🛒',Dining:'🍽️',Transport:'🚆',Rent:'🏠',Utilities:'💡',Shopping:'🛍️',Health:'💊',Entertainment:'🎬',Travel:'✈️',Subscriptions:'🔁',Other:'📦',Salary:'💼','Side income':'💻',Refund:'↩️'};
 const DEF_EXP=[['Food','🍔',1,['Groceries','Restaurants','Coffee','Delivery']],['Transport','🚆',7,['Gas','Transit','Parking','Rideshare','Tolls']],['Housing','🏠',8,['Rent','Maintenance','Furniture']],['Utilities','💡',2,['Electric','Internet','Phone','Water']],['Shopping','🛍️',10,['Clothes','Household','Electronics']],['Health','💊',0,['Pharmacy','Doctor','Fitness']],['Entertainment','🎬',9,['Movies','Events','Games']],['Travel','✈️',5,['Flights','Hotels','Activities']],['Subscriptions','🔁',4,['Streaming','Software','Memberships']],['Gifts','🎁',11,[]],['Education','📚',6,[]],['Other','📦',12,[]]];
-const DEF_INC=[['Salary','💼',3,[]],['Side income','💻',7,[]],['Refund','↩️',5,[]],['Interest','🏦',8,[]],['Other income','💵',12,[]]];
+const DEF_INC=[['Salary','💼',3,[]],['Card rewards','🎁',9,['Sign-up bonus','Cash back','Points','Referral bonus']],['Side income','💻',7,[]],['Refund','↩️',5,[]],['Interest','🏦',8,[]],['Other income','💵',12,[]]];
 const chevR='<svg class="i chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
 const chevD='<svg class="i chev" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></svg>';
 const icL='<svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';
@@ -342,14 +343,14 @@ function evalAmt(s){
 /* ---------- state ---------- */
 const mkCat=(a,kind)=>({id:uid(),name:a[0],icon:a[1],color:COLORS[a[2]],kind,budget:0,subs:a[3].slice()});
 function defaults(){
-  return{v:2,currency:'USD',mstart:1,budget:0,
+  return{v:3,currency:'USD',mstart:1,budget:0,
     cats:[...DEF_EXP.map(a=>mkCat(a,'exp')),...DEF_INC.map(a=>mkCat(a,'inc'))],
     accs:[{id:uid(),name:'Cash',group:'cash',open:0},{id:uid(),name:'Checking',group:'bank',open:0},{id:uid(),name:'Credit card',group:'card',open:0}],
     tx:[],rec:[],tpl:[],lock:{hash:null,after:0},sample:false,last:{}};
 }
 let S,storageOK=true;
 function addSample(){
-  S.accs=[['Cash','cash',120],['Checking','bank',2400],['Savings','savings',8000],['Credit card','card',0]].map(a=>({id:uid(),name:a[0],group:a[1],open:a[2],sample:true}));
+  S.accs=[['Cash','cash',120],['Checking','bank',2400],['Savings','savings',8000],['Card rewards','rewards',85],['Credit card','card',0]].map(a=>({id:uid(),name:a[0],group:a[1],open:a[2],sample:true}));
   const A=n=>S.accs.find(a=>a.name===n).id, C=n=>S.cats.find(c=>c.name===n).id;
   const push=(date,o)=>{if(date>today())return;S.tx.push(Object.assign({id:uid(),ts:Date.now(),type:'exp',sub:'',payee:'',note:'',tags:[],to:null,sample:true,date},o,{cat:o.cat?C(o.cat):null,acc:A(o.acc),to:o.to?A(o.to):null}))};
   const t=new Date();
@@ -362,6 +363,7 @@ function addSample(){
     push(on(2),{type:'xfer',amt:500,acc:'Checking',to:'Savings',note:'Monthly savings'});
     if(k>0){
       push(on(20),{type:'xfer',amt:r2(780*f),acc:'Checking',to:'Credit card',note:'Card payment'});
+      push(on(21),{type:'inc',cat:'Card rewards',sub:'Cash back',amt:r2(14*f),acc:'Card rewards',payee:'Credit card',note:'Monthly cash back'});
       [[5,'Food','Groceries',212,'Credit card','Supermarket'],[19,'Food','Groceries',188,'Credit card','Supermarket'],[10,'Food','Restaurants',146,'Credit card','Restaurants'],[12,'Utilities','Electric',96,'Checking','Electric co.'],[17,'Shopping','Household',120,'Credit card','Home store'],[22,'Transport','Gas',90,'Credit card','Gas station'],[25,'Entertainment','Events',55,'Credit card','Concert hall'],[3,'Subscriptions','Streaming',15.49,'Credit card','Streaming service'],[8,'Food','Coffee',38,'Cash','Coffee shop']]
         .forEach(r=>push(on(r[0]),{cat:r[1],sub:r[2],amt:r2(r[3]*(r[1]==='Subscriptions'?1:f)),acc:r[4],payee:r[5]}));
     }
@@ -369,9 +371,13 @@ function addSample(){
   [[0,'Food','Groceries',86.42,'Credit card','Supermarket','Weekly groceries'],[1,'Food','Restaurants',23.5,'Credit card','Thai kitchen','Team lunch',['work']],[2,'Transport','Transit',45,'Checking','Transit','Train pass top-up'],[3,'Food','Coffee',5.25,'Cash','Coffee shop',''],[4,'Shopping','Clothes',62.99,'Credit card','Sports store','Running shoes'],[6,'Utilities','Electric',74.3,'Checking','Electric co.',''],[8,'Food','Coffee',4.75,'Cash','Coffee shop',''],[9,'Entertainment','Movies',28,'Credit card','Cinema','Movie night'],[11,'Health','Pharmacy',20,'Checking','Pharmacy','Copay']]
     .forEach(r=>{const d=new Date(t);d.setDate(d.getDate()-r[0]);push(ds(d),{cat:r[1],sub:r[2],amt:r[3],acc:r[4],payee:r[5],note:r[6],tags:r[7]||[]})});
   S.tpl=[{id:uid(),name:'Coffee',sample:true,data:{type:'exp',amt:5.25,cat:C('Food'),sub:'Coffee',acc:A('Cash'),to:null,payee:'Coffee shop',note:'',tags:[]}}];
+  const bs=new Date(t.getFullYear(),t.getMonth(),t.getDate()-50),be=new Date(bs.getFullYear(),bs.getMonth(),bs.getDate()+90);
+  S.accs.find(a=>a.group==='card').bonus={amt:750,spend:4000,start:ds(bs),end:ds(be),done:false,tx:null};
   S.sample=true;
 }
-function fill(o){const d=defaults();for(const k in d)if(o[k]===undefined)o[k]=d[k];o.cats.forEach(c=>{if(!c.subs)c.subs=[];if(!c.icon)c.icon=c.name.charAt(0).toUpperCase()});return o}
+function fill(o){const d=defaults();for(const k in d)if(o[k]===undefined)o[k]=d[k];o.cats.forEach(c=>{if(!c.subs)c.subs=[];if(!c.icon)c.icon=c.name.charAt(0).toUpperCase()});
+  if((o.v||0)<3){if(!o.cats.some(c=>c.kind==='inc'&&/card rewards/i.test(c.name)))o.cats.splice((o.cats.findIndex(c=>c.kind==='inc')+1)||o.cats.length,0,mkCat(DEF_INC[1],'inc'));o.v=3}
+  return o}
 function upgrade(o){
   if(o.v>=2)return fill(o);
   if(o.sample&&o.tx.every(t=>t.sample)){S=defaults();addSample();return S}
@@ -384,7 +390,7 @@ function upgrade(o){
   const conv=t=>({id:t.id||uid(),ts:t.ts||Date.now(),type:t.type,amt:t.amt,date:t.date,cat:t.cat,sub:'',acc:by[t.method]||dflt,to:null,payee:'',note:t.note||'',tags:t.tags||[],rec:t.rec,sample:t.sample});
   n.tx=o.tx.map(conv);
   n.rec=(o.rec||[]).map(r=>Object.assign(conv(r),{freq:r.freq,start:r.start,anchor:r.anchor,last:r.last}));
-  return n;
+  n.v=2;return fill(n);
 }
 function load(){
   let o=null;try{const r=localStorage.getItem(KEY);if(r)o=JSON.parse(r)}catch(e){storageOK=false}
@@ -421,6 +427,7 @@ const payees=()=>[...new Set(S.tx.slice().reverse().map(t=>t.payee).filter(Boole
 let fc={};
 function fmt(o){const k=S.currency+JSON.stringify(o||{});if(!(k in fc)){try{fc[k]=new Intl.NumberFormat(undefined,Object.assign({style:'currency',currency:S.currency},o||{}))}catch(e){fc[k]=null}}return fc[k]}
 const money=(n,o)=>{const f=fmt(o);return f?f.format(n):S.currency+' '+n.toFixed(2)};
+const signed=t=>(t.type==='inc'?(t.amt<0?'−':'+'):(t.amt<0?'−':''))+money(Math.abs(t.amt));
 const compact=n=>money(n,{notation:'compact',maximumFractionDigits:1});
 const tiny=n=>{const f=fmt({notation:'compact',maximumFractionDigits:n>=1000?1:0,currencyDisplay:'narrowSymbol'});return f?f.format(n).replace(/[^\d.,KMBkmb]/g,''):String(Math.round(n))};
 function symbol(){const f=fmt();if(!f)return S.currency;const p=f.formatToParts(0).find(x=>x.type==='currency');return p?p.value:S.currency}
@@ -531,7 +538,7 @@ function rowHTML(t){
     title=t.note||t.payee||t.sub||c.name;
     const bits=[c.name+(t.sub?' · '+t.sub:'')];if(t.note&&t.payee)bits.push(t.payee);
     sub=bits.join(' · ');
-    amt=`<span class="row-a ${t.type==='inc'?'inc':''}">${t.type==='inc'?'+':''}${money(t.amt)}<small>${esc(acc(t.acc).name)}</small></span>`;
+    amt=`<span class="row-a ${t.type==='inc'?'inc':''}">${signed(t)}<small>${esc(acc(t.acc).name)}</small></span>`;
   }
   const tags=(t.tags||[]).map(g=>`<span class="tag">${esc(g)}</span>`).join('');
   return `<div class="swipe"><button class="del" data-act="row-del" data-id="${t.id}">Delete</button><button class="row" data-act="edit" data-id="${t.id}">${tile}<span class="row-m"><span class="row-t" style="display:block">${esc(title)}${t.rec?' <span class="tag">Repeats</span>':''}</span><span class="row-s" style="display:block">${esc(sub)}${tags}</span></span>${amt}</button></div>`;
@@ -567,14 +574,15 @@ function statsTab(){
   const tx=ptx(p).filter(t=>t.type===k),total=sum(tx);
   if(!tx.length)return `<div class="stack">${h}<div class="empty"><b>No ${k==='exp'?'spending':'income'} yet</b>Charts fill in as you log entries.</div>${trendHTML(k)}</div>`;
   const by={};tx.forEach(t=>{const r=by[t.cat]||(by[t.cat]={id:t.cat,v:0,n:0,subs:{},tx:[]});r.v+=t.amt;r.n++;const sk=t.sub||'';r.subs[sk]=(r.subs[sk]||0)+t.amt});
-  const arr=Object.values(by).sort((a,b)=>b.v-a.v);
-  h+=`<div class="group" style="padding:10px 0 6px">${donut(arr,total,k)}</div>`;
+  const arr=Object.values(by).filter(r=>r.v>0).sort((a,b)=>b.v-a.v),pos=arr.reduce((s,r)=>s+r.v,0);
+  if(!arr.length)return `<div class="stack">${h}<div class="empty"><b>Nothing to chart</b>Refunds cancel out everything in this period.</div></div>`;
+  h+=`<div class="group" style="padding:10px 0 6px">${donut(arr,pos,k,total)}</div>`;
   h+=`<div class="group">`+arr.map(r=>{
     const c=cat(r.id),open=view.open===r.id;
-    let x=`<button class="cell ic" data-act="stat-open" data-id="${r.id}"><span class="tile" style="--c:${c.color}">${esc(c.icon)}</span><span class="grow">${esc(c.name)}<span class="sub">${r.n} ${r.n===1?'entry':'entries'}</span></span><span class="pct">${Math.round(r.v/total*100)}%</span><span class="val num" style="margin-left:8px;color:var(--label)">${money(r.v)}</span>${open?chevD:chevR}</button>`;
+    let x=`<button class="cell ic" data-act="stat-open" data-id="${r.id}"><span class="tile" style="--c:${c.color}">${esc(c.icon)}</span><span class="grow">${esc(c.name)}<span class="sub">${r.n} ${r.n===1?'entry':'entries'}</span></span><span class="pct">${Math.round(r.v/pos*100)}%</span><span class="val num" style="margin-left:8px;color:var(--label)">${money(r.v)}</span>${open?chevD:chevR}</button>`;
     if(open){
       const subs=Object.entries(r.subs).sort((a,b)=>b[1]-a[1]),mx=subs[0][1];
-      x+=subs.map(s=>`<div class="subrow"><div class="t"><span>${esc(s[0]||'No subcategory')}</span><span>${money(s[1])}</span></div><div class="bar"><i style="width:${(s[1]/mx*100).toFixed(1)}%;background:${c.color}"></i></div></div>`).join('');
+      x+=subs.map(s=>`<div class="subrow"><div class="t"><span>${esc(s[0]||'No subcategory')}</span><span>${money(s[1])}</span></div><div class="bar"><i style="width:${Math.max(0,s[1]/mx*100).toFixed(1)}%;background:${c.color}"></i></div></div>`).join('');
       x+=`<button class="cell link" data-act="filt-cat" data-id="${r.id}" style="padding-left:62px">Show ${esc(c.name)} entries</button>`;
     }
     return x;
@@ -587,11 +595,11 @@ function statsTab(){
   h+=`<div class="group stats"><div><span>Average per day</span><b>${money(total/elapsed(p))}</b></div><div><span>Entries</span><b>${tx.length}</b></div><div><span>Largest</span><b>${money(big.amt)}</b><small>${esc(big.note||big.payee||cat(big.cat).name)}</small></div><div><span>Categories</span><b>${arr.length}</b></div></div>`;
   return `<div class="stack">${h}</div>`;
 }
-function donut(arr,total,k){
+function donut(arr,total,k,shown){
   const R=68,C=2*Math.PI*R;let off=0,segs='';
   arr.forEach(r=>{const len=r.v/total*C,gap=arr.length>1?Math.min(2.5,len*.4):0;
     segs+=`<circle r="${R}" cx="90" cy="90" fill="none" stroke="${cat(r.id).color}" stroke-width="24" stroke-dasharray="${Math.max(0,len-gap).toFixed(2)} ${(C-len+gap).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 90 90)"/>`;off+=len});
-  return `<svg class="donut" viewBox="0 0 180 180" role="img" aria-label="${k==='exp'?'Spending':'Income'} by category"><circle r="${R}" cx="90" cy="90" fill="none" style="stroke:var(--fill)" stroke-width="24"/>${segs}<text x="90" y="84" text-anchor="middle" class="d1">${k==='exp'?'Spent':'Earned'}</text><text x="90" y="108" text-anchor="middle" class="d2">${esc(compact(total))}</text></svg>`;
+  return `<svg class="donut" viewBox="0 0 180 180" role="img" aria-label="${k==='exp'?'Spending':'Income'} by category"><circle r="${R}" cx="90" cy="90" fill="none" style="stroke:var(--fill)" stroke-width="24"/>${segs}<text x="90" y="84" text-anchor="middle" class="d1">${k==='exp'?'Spent':'Earned'}</text><text x="90" y="108" text-anchor="middle" class="d2">${esc((shown<0?'−':'')+compact(Math.abs(shown==null?total:shown)))}</text></svg>`;
 }
 function trendHTML(k){
   const ps=lastPeriods(6),vals=ps.map(p=>sum(ptx(p).filter(t=>t.type===k))),mx=Math.max(...vals)||1;
@@ -617,14 +625,22 @@ function budgetHTML(p){
 function accTab(){
   let assets=0,liab=0;S.accs.forEach(a=>{const b=bal(a.id);if(LIAB[a.group]||b<0)liab+=b;else assets+=b});
   let h=banners()+`<div class="group"><div class="hero"><span>Net worth</span><b class="${assets+liab<0?'red':''}">${assets+liab<0?'−':''}${money(Math.abs(assets+liab))}</b></div><div class="sum3" style="border-top:.5px solid var(--sep);grid-template-columns:1fr 1fr"><div><span>Assets</span><b class="inc">${money(assets)}</b></div><div><span>Liabilities</span><b class="exp">${money(Math.abs(liab))}</b></div></div></div>`;
+  const act=S.accs.filter(a=>a.group==='card'&&a.bonus&&!a.bonus.done);
+  if(act.length)h+=`<div><div class="sec-h"><span>Sign-up bonuses</span><span class="num">${money(act.reduce((s,a)=>s+a.bonus.amt,0))} in progress</span></div><div class="group">${act.map(bonusRow).join('')}</div></div>`;
   GROUPS.forEach(g=>{
     const list=S.accs.filter(a=>a.group===g[0]);if(!list.length)return;
     const tot=list.reduce((s,a)=>s+bal(a.id),0);
     h+=`<div><div class="sec-h"><span>${g[1]}</span><span class="num">${tot<0?'−':''}${money(Math.abs(tot))}</span></div><div class="group">${list.map(a=>{const b=bal(a.id);return `<button class="cell ic" data-act="acc-edit" data-id="${a.id}"><span class="tile" style="--c:${GCOL[a.group]}">${GICON[a.group]}</span><span class="grow">${esc(a.name)}${LIAB[a.group]&&b<0?'<span class="sub">Owed</span>':''}</span><span class="val num" style="color:${b<0?'var(--red)':'var(--label)'}">${b<0?'−':''}${money(Math.abs(b))}</span>${chevR}</button>`}).join('')}</div></div>`;
   });
-  h+=`<div class="group"><button class="cell link" data-act="acc-new">Add Account</button><button class="cell link" data-act="xfer">New Transfer</button></div><p class="sec-f">Balances start from each account's starting balance plus everything logged. Transfers move money between accounts and never count as spending.</p>`;
+  h+=`<div class="group"><button class="cell link" data-act="acc-new">Add Account</button><button class="cell link" data-act="xfer">New Transfer</button></div><p class="sec-f">Balances start from each account's starting balance plus everything logged. Transfers move money between accounts and never count as spending. Add a sign-up bonus to any credit card to track its minimum spend; once earned it is added to your assets.</p>`;
   return `<div class="stack">${h}</div>`;
 }
+
+function bonusInfo(a){const b=a.bonus,sp=r2(sum(S.tx.filter(t=>t.type==='exp'&&t.acc===a.id&&t.date>=b.start&&t.date<=b.end))),left=Math.round((pd(b.end)-pd(today()))/864e5);return{sp,left,met:sp>=b.spend,pct:b.spend?Math.min(1,Math.max(0,sp/b.spend)):1}}
+function bonusMeter(a){const b=a.bonus,i=bonusInfo(a);return `<span class="meter${i.met?'':i.left<0?' over':''}" style="display:block"><i style="width:${(i.pct*100).toFixed(1)}%"></i></span>`}
+function bonusStatus(a){const b=a.bonus,i=bonusInfo(a);return i.met?'Spend met. Mark earned when it posts.':i.left<0?'Deadline passed':`${money(Math.max(0,b.spend-i.sp))} to go · ${i.left} day${i.left===1?'':'s'} left`}
+function bonusRow(a){const b=a.bonus,i=bonusInfo(a);
+  return `<button class="cell ic" data-act="acc-edit" data-id="${a.id}" style="flex-wrap:wrap"><span class="tile" style="--c:${GCOL.rewards}">🎁</span><span class="grow">${esc(a.name)}<span class="sub">${esc(bonusStatus(a))}</span></span><span class="val num" style="color:var(--label)">${money(b.amt)}</span>${chevR}<span style="flex-basis:100%;padding-left:42px;display:block">${bonusMeter(a)}<span class="sub" style="margin-top:6px">${money(i.sp)} of ${money(b.spend)} spent by ${esc(fdate(b.end))}</span></span></button>`}
 
 /* ---------- settings tab ---------- */
 function setTab(){
@@ -686,11 +702,11 @@ function newTx(type,extra){
 }
 function editTx(id){
   const t=S.tx.find(x=>x.id===id);if(!t)return;
-  sh={kind:'tx',id,type:t.type,kp:false,pick:false,d:{amt:String(t.amt),date:t.date,cat:t.cat,sub:t.sub||'',acc:t.acc,to:t.to||'',payee:t.payee||'',note:t.note||'',tags:(t.tags||[]).join(', '),repeat:'none'}};
+  sh={kind:'tx',id,type:t.type,kp:false,pick:false,d:{amt:String(t.amt).replace('-','−'),date:t.date,cat:t.cat,sub:t.sub||'',acc:t.acc,to:t.to||'',payee:t.payee||'',note:t.note||'',tags:(t.tags||[]).join(', '),repeat:'none'}};
   openPanel();
 }
 const amtShown=()=>sh.d.amt||'0';
-function amtExpr(){const a=sh.d.amt||'';if(/[÷×−+]/.test(a)){const v=evalAmt(a);return isNaN(v)?'':'= '+money(v)}return ''}
+function amtExpr(){const a=sh.d.amt||'',v=evalAmt(a);if(isNaN(v))return a==='−'?(sh.type==='exp'?'Negative expense = refund':'Negative amount'):'';let x='';if(/[÷×−+]/.test(a.replace(/^−/,'')))x='= '+(v<0?'−':'')+money(Math.abs(v));if(v<0&&sh.type!=='xfer')x+=(x?' · ':'')+(sh.type==='exp'?'Refund, lowers spending':'Lowers income');return x}
 function txSheet(){
   const d=sh.d,ty=sh.type,edit=!!sh.id,t=edit&&S.tx.find(x=>x.id===sh.id);
   const opts=sel=>S.accs.map(a=>`<option value="${a.id}"${a.id===sel?' selected':''}>${esc(a.name)}</option>`).join('');
@@ -731,15 +747,15 @@ function picker(ty,d){
 function capture(){
   if(!sh)return;const g=id=>{const e=$('#'+id);return e?e.value:null};
   if(sh.kind==='tx'){[['date','f-date'],['acc','f-acc'],['to','f-to'],['payee','f-payee'],['note','f-note'],['tags','f-tags'],['repeat','f-repeat']].forEach(p=>{const v=g(p[1]);if(v!==null)sh.d[p[0]]=v})}
-  else if(sh.kind==='acc'){['name','group','open'].forEach(k=>{const v=g('a-'+k);if(v!==null)sh.d[k]=v})}
+  else if(sh.kind==='acc'){['name','group','open','bamt','bspend','bstart','bend','bdep'].forEach(k=>{const v=g('a-'+k);if(v!==null)sh.d[k]=v})}
   else{['name','icon','budget'].forEach(k=>{const v=g('c-'+k);if(v!==null)sh.d[k]=v})}
 }
 function kp(k){
   let a=sh.d.amt||'';const seg=a.split(/[÷×−+]/).pop();
-  if(k==='done'){const v=evalAmt(a);if(!isNaN(v)&&/[÷×−+]/.test(a))a=String(v);sh.d.amt=a;sh.kp=false;$('#kp').hidden=true;$('#amt').classList.remove('typing');updAmt();return}
+  if(k==='done'){const v=evalAmt(a);if(!isNaN(v)&&/[÷×−+]/.test(a))a=(v<0?'−':'')+Math.abs(v);sh.d.amt=a;sh.kp=false;$('#kp').hidden=true;$('#amt').classList.remove('typing');updAmt();return}
   if(k==='C')a='';
   else if(k==='⌫')a=a.slice(0,-1);
-  else if(/[÷×−+]/.test(k)){if(!a)return;if(/[÷×−+.]$/.test(a))a=a.slice(0,-1);a+=k}
+  else if(/[÷×−+]/.test(k)){if(!a){if(k!=='−')return;sh.d.amt='−';updAmt();return}if(a==='−')return;if(/[÷×−+.]$/.test(a))a=a.slice(0,-1);a+=k}
   else if(k==='.'){if(seg.includes('.'))return;a+=seg?'.':'0.'}
   else{if(/\.\d\d$/.test(seg)||a.length>20)return;if(seg==='0')a=a.slice(0,-1);a+=k}
   sh.d.amt=a;updAmt();
@@ -750,7 +766,7 @@ function hideKp(){if(!sh||!sh.kp)return;sh.kp=false;const k=$('#kp');if(k)k.hidd
 function err(m){const e=$('#f-err');e.textContent=m;e.hidden=false;e.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function txData(){
   capture();const d=sh.d,ty=sh.type,amt=evalAmt(d.amt);
-  if(!(amt>0))return err('Enter an amount above zero.');
+  if(isNaN(amt)||amt===0)return err('Enter an amount.');if(ty==='xfer'&&amt<0)return err('Transfers need a positive amount. Swap From and To instead.');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d.date))return err('Pick a date.');
   if(!d.acc||!S.accs.some(a=>a.id===d.acc))return err('Add an account first in the Accounts tab.');
   if(ty==='xfer'){if(!d.to)return err('Choose the account the money goes to.');if(d.to===d.acc)return err('From and To need to be different accounts.')}
@@ -773,9 +789,30 @@ function saveTx(more){
   closeSheet();render();toast(msg);
 }
 
-function openAcc(id){
-  const a=id&&S.accs.find(x=>x.id===id);
-  sh={kind:'acc',id:a?a.id:null,d:a?{name:a.name,group:a.group,open:a.open?String(a.open):''}:{name:'',group:'bank',open:''}};openPanel();
+function openAcc(id,group){
+  const a=id&&S.accs.find(x=>x.id===id),b=a&&a.bonus,t=new Date();
+  sh={kind:'acc',id:a?a.id:null,d:{name:a?a.name:'',group:a?a.group:(group||'bank'),open:a&&a.open?String(LIAB[a.group]?-a.open:a.open):'',
+    bamt:b?String(b.amt):'',bspend:b&&b.spend?String(b.spend):'',bstart:b?b.start:today(),bend:b?b.end:ds(new Date(t.getFullYear(),t.getMonth()+3,t.getDate())),bdep:''}};openPanel();
+}
+function saveAcc(){
+  const d=sh.d;if(!d.name.trim())return err('Give the account a name.');
+  let o=d.open.trim()?evalAmt(d.open):0;if(isNaN(o))return err('Balance should be a number, like 1200.');
+  if(LIAB[d.group])o=-o;
+  let a=sh.id&&S.accs.find(x=>x.id===sh.id),bonus;
+  const keepDone=a&&a.bonus&&a.bonus.done;
+  if(d.group==='card'&&!keepDone){
+    const ba=d.bamt.trim()?evalAmt(d.bamt):0,bs=d.bspend.trim()?evalAmt(d.bspend):0;
+    if(isNaN(ba)||ba<0)return err('Bonus value should be a number, like 750.');
+    if(ba>0){
+      if(isNaN(bs)||bs<0)return err('Spend needed should be a number, like 4000.');
+      if(!d.bstart||!d.bend||d.bend<d.bstart)return err('The bonus deadline needs to be after its start date.');
+      bonus=Object.assign({},(a&&a.bonus)||{done:false,tx:null},{amt:ba,spend:bs,start:d.bstart,end:d.bend});
+    }
+  }
+  if(!a){a={id:uid()};S.accs.push(a);sh.id=a.id}
+  Object.assign(a,{name:d.name.trim(),group:d.group,open:o});
+  if(!keepDone){if(bonus)a.bonus=bonus;else delete a.bonus}
+  save();return a;
 }
 function accSheet(){
   const d=sh.d,a=sh.id&&S.accs.find(x=>x.id===sh.id),n=a?S.tx.filter(t=>t.acc===a.id||t.to===a.id).length:0;
@@ -783,11 +820,29 @@ function accSheet(){
   <div class="big-tile"><span class="tile" style="--c:${GCOL[d.group]}">${GICON[d.group]}</span></div>
   <div class="group"><label class="frow"><span>Name</span><input id="a-name" value="${esc(d.name)}" placeholder="Like Chase Checking" autocomplete="off"></label>
   <label class="frow"><span>Type</span><select id="a-group">${GROUPS.map(g=>`<option value="${g[0]}"${g[0]===d.group?' selected':''}>${g[1]}</option>`).join('')}</select></label>
-  <label class="frow"><span>Starting balance</span><input id="a-open" inputmode="decimal" value="${esc(d.open)}" placeholder="0.00"></label></div>
-  <p class="sec-f">For a credit card or loan you already owe on, enter the amount as negative, like -450.</p>
+  <div class="frow"><label for="a-open" style="flex:none;min-width:84px">${LIAB[d.group]?'Amount owed':d.group==='rewards'?'Current value':'Starting balance'}</label><input id="a-open" inputmode="decimal" value="${esc(d.open)}" placeholder="0.00"><button class="sgn" data-act="sign" aria-label="Switch between positive and negative">±</button></div></div>
+  <p class="sec-f">${LIAB[d.group]?'Enter what you owe right now as a plain number, like 450.':d.group==='rewards'?'The cash value of points or cash back you hold now. Log new rewards as Income in the Card rewards category.':'Tap ± for a negative balance, like an overdrawn account.'}</p>
+  ${bonusSection(a,d)}
   <p class="err" id="f-err" hidden></p>
-  ${a?`<div class="group"><div class="cell"><span class="grow">Current balance</span><span class="val num" style="color:var(--label)">${money(bal(a.id))}</span></div><button class="cell link" data-act="acc-show" data-id="${a.id}">Show ${n} Transaction${n===1?'':'s'}</button><button class="cell link" data-act="acc-xfer" data-id="${a.id}">Transfer from This Account</button><button class="cell red" data-act="acc-del" data-id="${a.id}">Delete Account</button></div>`:''}
+  ${a?`<div class="group"><div class="cell"><span class="grow">Current balance</span><span class="val num" style="color:${bal(a.id)<0?'var(--red)':'var(--label)'}">${bal(a.id)<0?'−':''}${money(Math.abs(bal(a.id)))}</span></div><button class="cell link" data-act="acc-show" data-id="${a.id}">Show ${n} Transaction${n===1?'':'s'}</button><button class="cell link" data-act="acc-xfer" data-id="${a.id}">Transfer from This Account</button><button class="cell red" data-act="acc-del" data-id="${a.id}">Delete Account</button></div>`:''}
   </div>`;
+}
+function bonusSection(a,d){
+  if(d.group!=='card')return '';
+  const b=a&&a.bonus;
+  if(b&&b.done)return `<div><div class="sec-h"><span>Sign-up bonus</span></div><div class="group"><div class="cell"><span class="grow">Earned ${esc(fdate(b.doneOn||b.end))}</span><span class="val num" style="color:var(--green)">+${money(b.amt)}</span></div><button class="cell link" data-act="bonus-new">Track Another Bonus</button></div></div>`;
+  const deps=S.accs.filter(x=>!LIAB[x.group]).sort((x,y)=>(y.group==='rewards')-(x.group==='rewards'));
+  const noRewards=!deps.some(x=>x.group==='rewards');
+  const live=b&&a?bonusInfo(a):null;
+  return `<div><div class="sec-h"><span>Sign-up bonus</span></div><div class="group">
+  <label class="frow"><span>Bonus value</span><input id="a-bamt" inputmode="decimal" value="${esc(d.bamt)}" placeholder="Like 750"></label>
+  <label class="frow"><span>Spend needed</span><input id="a-bspend" inputmode="decimal" value="${esc(d.bspend)}" placeholder="Like 4000"></label>
+  <label class="frow"><span>Starts</span><input type="date" id="a-bstart" value="${esc(d.bstart)}"></label>
+  <label class="frow"><span>Deadline</span><input type="date" id="a-bend" value="${esc(d.bend)}"></label>
+  ${live?`<div class="cell" style="display:block"><span style="display:flex;justify-content:space-between;gap:8px;font-size:15px"><span>${money(live.sp)} of ${money(b.spend)}</span><span>${esc(live.met?'Spend met':live.left<0?'Deadline passed':live.left+' days left')}</span></span>${bonusMeter(a)}</div>
+  <label class="frow"><span>Deposit to</span><select id="a-bdep">${deps.map(x=>`<option value="${x.id}"${x.id===d.bdep?' selected':''}>${esc(x.name)}</option>`).join('')}<option value="__card"${d.bdep==='__card'?' selected':''}>Statement credit</option><option value="__new"${d.bdep==='__new'||(!d.bdep&&noRewards)?' selected':''}>New rewards account</option></select></label>
+  <button class="cell link" data-act="bonus-earn">Mark Bonus Earned</button><button class="cell red" data-act="bonus-clear">Remove Bonus</button>`:''}
+  </div><p class="sec-f">Purchases on this card from the start date to the deadline count toward the spend. ${live?'Marking it earned logs the bonus as Card rewards income and adds it to your assets.':'Save to start tracking.'}</p></div>`;
 }
 function openCat(id,kind){
   const c=id&&S.cats.find(x=>x.id===id);
@@ -903,7 +958,7 @@ document.addEventListener('click',e=>{
   case 'undo':if(undoFn){undoFn();undoFn=null}$('#toast').hidden=true;break;
   case 'clear-sample':
     S.tx=S.tx.filter(t=>!t.sample);S.tpl=S.tpl.filter(t=>!t.sample);S.rec=S.rec.filter(r=>!r.sample);
-    S.accs.forEach(x=>{if(x.sample){x.open=0;delete x.sample}});S.accs=S.accs.filter(x=>x.name!=='Savings'||S.tx.some(t=>t.acc===x.id||t.to===x.id));
+    S.accs.forEach(x=>{if(x.sample){x.open=0;delete x.bonus;x.drop=!['Cash','Checking','Credit card'].includes(x.name);delete x.sample}});S.accs=S.accs.filter(x=>{const k=!x.drop||S.tx.some(t=>t.acc===x.id||t.to===x.id);delete x.drop;return k});
     S.sample=false;save();render();toast('Sample entries cleared');break;
 
   case 'sheet-close':closeSheet();break;
@@ -919,16 +974,23 @@ document.addEventListener('click',e=>{
   case 'tx-more':saveTx(true);break;
   case 'tx-dup':capture();sh.id=null;sh.d.date=today();sh.d.repeat='none';saveTx(false);break;
   case 'tx-del':{if(!armed(b,'Tap again to delete'))return;const i=S.tx.findIndex(x=>x.id===sh.id),g=S.tx.splice(i,1)[0];save();closeSheet();render();toast('Deleted',()=>{S.tx.push(g);save();render()});break}
-  case 'fav-use':{const f=S.tpl.find(x=>x.id===id);if(!f)return;const fd=f.data;Object.assign(sh.d,{amt:fd.amt?String(fd.amt):'',cat:fd.cat||sh.d.cat,sub:fd.sub||'',acc:S.accs.some(x=>x.id===fd.acc)?fd.acc:sh.d.acc,to:fd.to||'',payee:fd.payee||'',note:fd.note||'',tags:(fd.tags||[]).join(', ')});sh.kp=!fd.amt;drawSheet();break}
+  case 'fav-use':{const f=S.tpl.find(x=>x.id===id);if(!f)return;const fd=f.data;Object.assign(sh.d,{amt:fd.amt?String(fd.amt).replace('-','−'):'',cat:fd.cat||sh.d.cat,sub:fd.sub||'',acc:S.accs.some(x=>x.id===fd.acc)?fd.acc:sh.d.acc,to:fd.to||'',payee:fd.payee||'',note:fd.note||'',tags:(fd.tags||[]).join(', ')});sh.kp=!fd.amt;drawSheet();break}
   case 'fav-save':{capture();const d=sh.d,amt=evalAmt(d.amt);if(sh.type!=='xfer'&&!d.cat)return err('Choose a category first.');
     const c=sh.type==='xfer'?null:cat(d.cat);const name=d.note.trim()||d.payee.trim()||d.sub||(c?c.name:'Transfer');
-    S.tpl.push({id:uid(),name,data:{type:sh.type,amt:amt>0?amt:0,cat:sh.type==='xfer'?null:d.cat,sub:d.sub,acc:d.acc,to:d.to||null,payee:d.payee.trim(),note:d.note.trim(),tags:d.tags.split(',').map(s=>s.trim()).filter(Boolean)}});save();toast('Added "'+name+'" to favorites');break}
+    S.tpl.push({id:uid(),name,data:{type:sh.type,amt:amt&&!isNaN(amt)?amt:0,cat:sh.type==='xfer'?null:d.cat,sub:d.sub,acc:d.acc,to:d.to||null,payee:d.payee.trim(),note:d.note.trim(),tags:d.tags.split(',').map(s=>s.trim()).filter(Boolean)}});save();toast('Added "'+name+'" to favorites');break}
 
   case 'acc-new':openAcc(null);break;
   case 'acc-edit':openAcc(id);break;
-  case 'acc-save':{capture();const d=sh.d;if(!d.name.trim())return err('Give the account a name.');const o=d.open.trim()?evalAmt(d.open):0;if(isNaN(o))return err('Starting balance should be a number, like 1200 or -450.');
-    if(sh.id)Object.assign(S.accs.find(x=>x.id===sh.id),{name:d.name.trim(),group:d.group,open:o});else S.accs.push({id:uid(),name:d.name.trim(),group:d.group,open:o});
-    save();closeSheet();render();toast('Saved');break}
+  case 'acc-save':{capture();if(!saveAcc())return;closeSheet();render();toast('Saved');break}
+  case 'sign':{const i=$('#a-open');const v=i.value.trim();i.value=/^[-−]/.test(v)?v.slice(1):'-'+v;break}
+  case 'bonus-earn':{capture();const a=saveAcc();if(!a)return;if(!a.bonus)return err('Enter a bonus value first.');
+    let dep=sh.d.bdep||'__new';
+    if(dep==='__new'){const r={id:uid(),name:a.name+' rewards',group:'rewards',open:0};S.accs.push(r);dep=r.id}else if(dep==='__card')dep=a.id;
+    const rc=S.cats.find(c=>c.kind==='inc'&&/card rewards/i.test(c.name))||S.cats.find(c=>c.kind==='inc');
+    const tx={id:uid(),ts:Date.now(),type:'inc',amt:a.bonus.amt,date:today(),cat:rc.id,sub:rc.subs.includes('Sign-up bonus')?'Sign-up bonus':'',acc:dep,to:null,payee:a.name,note:'Sign-up bonus',tags:['bonus']};
+    S.tx.push(tx);Object.assign(a.bonus,{done:true,doneOn:today(),tx:tx.id});save();closeSheet();render();toast(money(tx.amt)+' added to '+acc(dep).name);break}
+  case 'bonus-clear':{if(!armed(b,'Tap again to remove'))return;const a=S.accs.find(x=>x.id===sh.id);delete a.bonus;save();openAcc(a.id);render();break}
+  case 'bonus-new':{const a=S.accs.find(x=>x.id===sh.id);delete a.bonus;save();openAcc(a.id);break}
   case 'acc-show':closeSheet();view.filt={k:'acc',id};view.tab='tx';render();window.scrollTo(0,0);break;
   case 'acc-xfer':closeSheet();newTx('xfer',{acc:id,to:''});break;
   case 'acc-del':{const n=S.tx.filter(t=>t.acc===id||t.to===id).length;if(n)return err(`This account has ${n} transaction${n===1?'':'s'}. Delete or move ${n===1?'it':'them'} first.`);if(S.accs.length<2)return err('Keep at least one account.');
