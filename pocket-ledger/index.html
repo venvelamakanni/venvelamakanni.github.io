@@ -22,7 +22,7 @@ img{max-width:100%}
   --bg:#F2F2F7;--bg2:#FFFFFF;--bg3:#E9E9EE;--fill:rgba(120,120,128,.12);--fill2:rgba(120,120,128,.2);--thumb:#FFFFFF;
   --label:#000000;--label2:rgba(60,60,67,.6);--label3:rgba(60,60,67,.3);--sep:rgba(60,60,67,.2);
   --blue:#007AFF;--red:#FF3B30;--green:#248A3D;--orange:#C75F00;--meter-ok:#34C759;--meter-warn:#FF9500;
-  --glass:rgba(250,250,252,.72);--glass-edge:rgba(255,255,255,.7);--shadow:0 8px 30px rgba(0,0,0,.12);
+  --glass:rgba(250,250,252,.72);--glass-btn:rgba(255,255,255,.42);--glass-tint:rgba(0,122,255,.78);--glass-hi:rgba(255,255,255,.75);--glass-sheen:rgba(255,255,255,.55);--glass-edge:rgba(255,255,255,.7);--shadow:0 8px 30px rgba(0,0,0,.12);
   --kbd:#D1D3D9;--key:#FFFFFF;--key2:#ADB2BC;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro",system-ui,"Helvetica Neue",Arial,sans-serif;
   --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
@@ -32,13 +32,13 @@ img{max-width:100%}
   --bg:#000000;--bg2:#1C1C1E;--bg3:#2C2C2E;--fill:rgba(118,118,128,.24);--fill2:rgba(118,118,128,.36);--thumb:#636366;
   --label:#FFFFFF;--label2:rgba(235,235,245,.6);--label3:rgba(235,235,245,.3);--sep:rgba(84,84,88,.65);
   --blue:#0A84FF;--red:#FF453A;--green:#30D158;--orange:#FF9F0A;--meter-ok:#30D158;--meter-warn:#FF9F0A;
-  --glass:rgba(36,36,40,.68);--glass-edge:rgba(255,255,255,.12);--shadow:0 8px 30px rgba(0,0,0,.55);
+  --glass:rgba(36,36,40,.68);--glass-btn:rgba(60,60,67,.38);--glass-tint:rgba(10,132,255,.55);--glass-hi:rgba(255,255,255,.28);--glass-sheen:rgba(255,255,255,.14);--glass-edge:rgba(255,255,255,.12);--shadow:0 8px 30px rgba(0,0,0,.55);
   --kbd:#1F1F21;--key:#4B4B4F;--key2:#2E2E31;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#000000;--bg2:#1C1C1E;--bg3:#2C2C2E;--fill:rgba(118,118,128,.24);--fill2:rgba(118,118,128,.36);--thumb:#636366;
   --label:#FFFFFF;--label2:rgba(235,235,245,.6);--label3:rgba(235,235,245,.3);--sep:rgba(84,84,88,.65);
   --blue:#0A84FF;--red:#FF453A;--green:#30D158;--orange:#FF9F0A;--meter-ok:#30D158;--meter-warn:#FF9F0A;
-  --glass:rgba(36,36,40,.68);--glass-edge:rgba(255,255,255,.12);--shadow:0 8px 30px rgba(0,0,0,.55);
+  --glass:rgba(36,36,40,.68);--glass-btn:rgba(60,60,67,.38);--glass-tint:rgba(10,132,255,.55);--glass-hi:rgba(255,255,255,.28);--glass-sheen:rgba(255,255,255,.14);--glass-edge:rgba(255,255,255,.12);--shadow:0 8px 30px rgba(0,0,0,.55);
   --kbd:#1F1F21;--key:#4B4B4F;--key2:#2E2E31;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{min-height:100%}
@@ -63,7 +63,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .tbtn:disabled{color:var(--label3)}
 .navicon{width:36px;height:36px;border-radius:50%;background:var(--fill);border:0;color:var(--blue);display:grid;place-items:center}
 
-.app{max-width:620px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(120px + env(safe-area-inset-bottom,0px))}
+.app{max-width:620px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(190px + env(safe-area-inset-bottom,0px))}
 .large{font-size:34px;line-height:41px;font-weight:700;letter-spacing:.012em;margin:0 0 12px;text-wrap:balance}
 .stack{display:flex;flex-direction:column;gap:12px}
 
@@ -182,12 +182,16 @@ button.cell:active,.row:active{background:var(--fill)}
 
 /* tab bar */
 .tabwrap{position:fixed;left:0;right:0;bottom:0;z-index:20;pointer-events:none;padding:0 max(16px,env(safe-area-inset-right,0px)) max(12px,calc(env(safe-area-inset-bottom,0px) - 4px)) max(16px,env(safe-area-inset-left,0px))}
-.tabin{max-width:620px;margin:0 auto;display:flex;gap:10px;align-items:center}
-.tabbar{pointer-events:auto;flex:1;display:grid;grid-template-columns:repeat(4,1fr);height:62px;padding:4px;border-radius:31px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:var(--shadow),inset 0 0 0 .5px var(--glass-edge)}
+.tabin{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.fabs{align-self:flex-end;display:flex;gap:12px;align-items:center}
+.tabbar{pointer-events:auto;display:grid;grid-template-columns:repeat(4,1fr);height:62px;padding:4px;border-radius:31px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:var(--shadow),inset 0 0 0 .5px var(--glass-edge)}
 .tab{border:0;background:none;border-radius:27px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:600;color:var(--label);min-width:0}
 .tab svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tab.on{color:var(--blue);background:var(--fill)}
-.fab{pointer-events:auto;width:62px;height:62px;border-radius:50%;border:0;background:var(--blue);color:#fff;box-shadow:var(--shadow);display:grid;place-items:center;flex:none}
+.fab,.mic{pointer-events:auto;width:58px;height:58px;border-radius:50%;border:0;display:grid;place-items:center;flex:none;-webkit-backdrop-filter:blur(22px) saturate(190%);backdrop-filter:blur(22px) saturate(190%);transition:transform .15s ease}
+.fab{color:#fff;background:linear-gradient(180deg,var(--glass-sheen),rgba(255,255,255,0) 58%),var(--glass-tint);box-shadow:0 8px 24px rgba(0,122,255,.28),inset 0 1px 0 var(--glass-hi),inset 0 0 0 .5px rgba(255,255,255,.35)}
+.fab:active,.mic:active{transform:scale(.92)}
+@media (prefers-reduced-motion:reduce){.fab,.mic{transition:none}}
 .fab svg{width:28px;height:28px;stroke:#fff;stroke-width:2.6;fill:none;stroke-linecap:round}
 
 /* sheet */
@@ -200,7 +204,7 @@ button.cell:active,.row:active{background:var(--fill)}
 .sscroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px}
 .sscroll>*{flex-shrink:0}
 .sgn{flex:none;width:40px;height:32px;border-radius:8px;border:0;background:var(--fill);color:var(--blue);font-size:19px;font-weight:600}
-.mic{pointer-events:auto;width:54px;height:54px;border-radius:50%;border:0;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:var(--shadow),inset 0 0 0 .5px var(--glass-edge);color:var(--blue);display:grid;place-items:center;flex:none}
+.mic{color:var(--blue);background:linear-gradient(180deg,var(--glass-sheen),rgba(255,255,255,0) 58%),var(--glass-btn);box-shadow:var(--shadow),inset 0 1px 0 var(--glass-hi),inset 0 0 0 .5px var(--glass-edge)}
 .mic svg,.vmic svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .vmic{position:relative;width:92px;height:92px;border-radius:50%;border:0;background:var(--blue);color:#fff;display:grid;place-items:center;margin:6px auto 0;box-shadow:var(--shadow)}
 .vmic svg{width:40px;height:40px}
@@ -291,7 +295,7 @@ textarea{width:100%;height:100px;border:0;border-radius:12px;background:var(--bg
 .pin button:active{background:var(--fill2)}
 .pin .pin-del{background:none;font-size:17px}
 
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:var(--shadow),inset 0 0 0 .5px var(--glass-edge);color:var(--label);border-radius:99px;padding:12px 18px;display:flex;gap:14px;align-items:center;font-size:15px;font-weight:600;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(160px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:var(--shadow),inset 0 0 0 .5px var(--glass-edge);color:var(--label);border-radius:99px;padding:12px 18px;display:flex;gap:14px;align-items:center;font-size:15px;font-weight:600;max-width:calc(100% - 32px)}
 .toast button{border:0;background:none;color:var(--blue);font-weight:700;padding:0;font-size:15px}
 .banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--bg2);border-radius:22px;padding:12px 16px;font-size:15px;color:var(--label2)}
 </style>
@@ -302,14 +306,16 @@ textarea{width:100%;height:100px;border:0;border-radius:12px;background:var(--bg
 <main class="app" id="app"></main>
 
 <div class="tabwrap"><div class="tabin">
+  <div class="fabs">
+  <button class="mic" data-act="voice" aria-label="Add by voice"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button>
+  <button class="fab" data-act="add" aria-label="Add transaction"><svg viewBox="0 0 28 28"><path d="M14 6v16M6 14h16"/></svg></button>
+  </div>
   <nav class="tabbar" aria-label="Sections">
     <button class="tab" data-act="tab" data-v="tx"><svg viewBox="0 0 28 28"><rect x="4.5" y="4.5" width="19" height="19" rx="5"/><path d="M9.5 10.5h9M9.5 14h9M9.5 17.5h5.5"/></svg>Transactions</button>
     <button class="tab" data-act="tab" data-v="stats"><svg viewBox="0 0 28 28"><path d="M13 5.1A9 9 0 1 0 22.9 15H13z"/><path d="M16.5 3.6a8.5 8.5 0 0 1 7.9 7.9h-7.9z"/></svg>Stats</button>
     <button class="tab" data-act="tab" data-v="acc"><svg viewBox="0 0 28 28"><rect x="3.5" y="7" width="21" height="15" rx="3.5"/><path d="M3.5 12h21M8 17.5h5"/></svg>Accounts</button>
     <button class="tab" data-act="tab" data-v="set"><svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="3.6"/><path d="M14 3.5v3M14 21.5v3M3.5 14h3M21.5 14h3M6.6 6.6l2.1 2.1M19.3 19.3l2.1 2.1M6.6 21.4l2.1-2.1M19.3 8.7l2.1-2.1"/></svg>Settings</button>
   </nav>
-  <button class="mic" data-act="voice" aria-label="Add by voice"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button>
-  <button class="fab" data-act="add" aria-label="Add transaction"><svg viewBox="0 0 28 28"><path d="M14 6v16M6 14h16"/></svg></button>
 </div></div>
 
 <div class="sheet" id="sheet" hidden><button class="scrim" data-act="sheet-close" aria-label="Close"></button><div class="panel" id="panel" role="dialog" aria-modal="true"></div></div>
@@ -717,7 +723,7 @@ function setTab(){
   <div><div class="sec-h"><span>Install on iPhone</span></div><div class="group"><div class="cell" style="display:block;font-size:15px;line-height:1.45">1. Open this app's own link in Safari.<br>2. Tap Share, then Add to Home Screen.<br>3. Launch it from the new icon. It opens full screen like any app.</div></div></div>
 
   <div><div class="sec-h"><span>Data</span></div><div class="group">${S.sample?'<button class="cell link" data-act="clear-sample">Clear Sample Entries</button>':''}<button class="cell red" data-act="erase">Erase All Data</button></div></div>
-  <p class="sec-f" style="text-align:center">Pocket Ledger · build 7</p>
+  <p class="sec-f" style="text-align:center">Pocket Ledger · build 8</p>
   </div>`;
 }
 
